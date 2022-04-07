@@ -1,0 +1,46 @@
+package Utils
+
+import math.Numeric.Implicits.infixNumericOps
+import scala.reflect.ClassTag
+import scala.util.Random
+
+
+/*final class Tensor(val lenght: Int) extends Array[Double](lenght) {
+  
+}*/
+
+object Tensor {
+
+    def init [T : Numeric : ClassTag] (shape: Int, value: T) : Array[T] = 
+        Array.fill(shape)(value)
+    def init [T : Numeric : ClassTag] (shape: (Int, Int), value: T) : Array[Array[T]] = 
+        Array.fill(shape(0), shape(1))(value)
+    def init [T : Numeric : ClassTag] (shape: (Int, Int, Int), value: T) : Array[Array[Array[T]]] = 
+        Array.fill(shape(0), shape(1), shape(2))(value)
+
+    def zeros (lenght: Int) : Array[Double] = init(lenght, 0)
+    def zeros (shape: (Int, Int)) : Array[Array[Double]] = init(shape, 0)
+    def zeros (shape: (Int, Int, Int)) : Array[Array[Array[Double]]] = init(shape, 0)
+
+    def random (lenght: Int) : Array[Double] = Array.fill(lenght){scala.util.Random.nextDouble()}
+
+
+    def randomChoice [T : Numeric : ClassTag] (values: Array[T], size : Int) : Array[T] = 
+        Array.fill(size){ values (Random.nextInt(values.length)) }
+
+    def randomChoice [T : Numeric : ClassTag] (values: Array[T], shape : (Int, Int)) : Array[Array[T]] = 
+        Array.fill(shape (0) ){ Tensor.randomChoice(values, shape (1)) }
+
+    def where [T : ClassTag] (array: Array[T], condition: (T) => Boolean, thenValue: T, elseValue: T) : Array[T] = 
+        array.map( elem => if (condition(elem)) then thenValue else elseValue )
+
+    def where [T : ClassTag] (array: Array[Array[T]], condition: (T) => Boolean, thenValue: T, elseValue: T) : Array[Array[T]] = 
+        array.map( elem => Tensor.where(elem, condition, thenValue, elseValue) )
+
+    def sum [T : Numeric] (array: Array[T]) : T = array.reduceLeft[T](_+_)
+    def multiply [T : Numeric : ClassTag ] (array1: Array[T], array2: Array[T]) : Array[T] = 
+        (array1 zip array2).map(x => x(0) * x(1))
+
+    def shape [T : Numeric] (array: Array[T]) : Int = array.length
+    def shape [T : Numeric] (array: Array[Array[T]]) : (Int, Int) = (array.length, array(0).length)
+}
