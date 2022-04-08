@@ -60,6 +60,9 @@ object Main {
         val image = new Image(new File("./data/nike_noisy.png"))
         val pixelArray = image.getPixelMatrix(true)
         val pixelMatrix = new DenseMatrix[Int](image.width, image.height, pixelArray)
+        val paddedMatrix = DenseMatrix.zeros[Int](image.width + 2, image.height + 2)
+        // Set padded image
+        paddedMatrix(1 to -2, 1 to -2) := pixelMatrix
 
         // val im = new Image(new File(s"./data/par/im.png"))
         // im.setPixelMatrix(pixelMatrix.data, pixelMatrix.rows, pixelMatrix.cols, true)
@@ -95,11 +98,13 @@ object Main {
                             else yFrom + subHeight -1 + restHeight
                 println(xFrom to xTo)
                 println(yFrom to yTo)
-                println
-                val matrix = pixelMatrix( yFrom to yTo, xFrom to xTo).copy
-                (index, new Denoiser( matrix ).run())
+                
+                // Set safe padding
+                val matrix = paddedMatrix(yFrom to (yTo +2), xFrom to (xTo +2)).copy
+                (index, new Denoiser( matrix ).run()(1 to -2, 1 to -2).copy)
                 //(index, matrix)
             })
+            //.reduce
             .foreach(matrix => {
                 val image2 = new Image(new File(s"./data/par/${matrix._1}.png"))
                 image2.setPixelMatrix(matrix._2.data, matrix._2.rows, matrix._2.cols, true)
