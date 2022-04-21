@@ -87,5 +87,5 @@ The order in which numbers are selected for operation by the reduce method is ra
 
 
 <iframe src="https://superruzafa.github.io/visual-scala-reference/reduce" width = "100%" height = "100%"></iframe>
+<iframe src="https://superruzafa.github.io/visual-scala-reference/aggregate" width = "100%" height = "100%"></iframe>
 
-{% include "git+https://github.com/blah/button-color.git/README.md" %}
