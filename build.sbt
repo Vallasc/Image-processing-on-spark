@@ -9,7 +9,6 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % 
 
 libraryDependencies  ++= Seq(
   "org.scalanlp" %% "breeze" % "1.3",
-  "org.scalanlp" %% "breeze-viz" % "1.3"
 )
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % "3.2.0" % "provided"
