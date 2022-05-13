@@ -1,6 +1,5 @@
 import java.io.File
 import breeze.linalg.DenseVector
-import breeze.plot.Figure
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import breeze.linalg.DenseMatrix

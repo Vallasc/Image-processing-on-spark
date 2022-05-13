@@ -11,7 +11,7 @@ libraryDependencies  ++= Seq(
   "org.scalanlp" %% "breeze" % "1.3",
 )
 
-libraryDependencies += "org.apache.spark" %% "spark-core" % "3.2.0"// % "provided"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "3.2.0" % "provided"
 
 assembly / assemblyMergeStrategy := {
  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
