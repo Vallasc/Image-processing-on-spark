@@ -18,12 +18,13 @@ object Main {
         
         //scalaImplementation
         //scalaImplementationParallel
-        sparkImplementation
+        val t = time(sparkImplementation)
+        println("Time: " + t)
         println("End")
     }
 
     def scalaImplementation = {
-        val image = new Image(new File("./data/nike_noisy.png"))
+        val image = new Image(new File("./data/testo_noisy.png"))
         //val image = new Image(new File("./data/nike.png"))
         val pixelArray = image.getPixelMatrix(true)
         println("Image")
@@ -66,7 +67,7 @@ object Main {
                                     .setMaster("local[*]")
         val sc = new SparkContext(conf)
 
-        val image = new Image(new File("./data/nike_noisy.png"))
+        val image = new Image(new File("./data/testo_noisy.png"))
         val pixelArray = image.getPixelMatrix(true)
         val pixelMatrix = new DenseMatrix[Int](image.width, image.height, pixelArray)
 
