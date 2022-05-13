@@ -6,10 +6,7 @@ import breeze.linalg.InjectNumericOps
 import scala.util.Random
 import java.io.File
 
-class Denoiser (imageMatrix : DenseMatrix[Int]) {
-    val MAX_BURNS = 100
-    val MAX_SAMPLES = 200
-
+class Denoiser (imageMatrix :DenseMatrix[Int], MAX_BURNS :Int = 100, MAX_SAMPLES :Int = 200) {
     //val ITA = 0.8
     //val BETA = 3
 
@@ -20,6 +17,9 @@ class Denoiser (imageMatrix : DenseMatrix[Int]) {
         this(new DenseMatrix[Int](width, height, imageMatrix ))
     }
 
+    def this(imageMatrix :Array[Int], width :Int, height :Int, MAX_BURNS :Int, MAX_SAMPLES :Int) {
+        this(new DenseMatrix[Int](width, height, imageMatrix, MAX_BURNS, MAX_SAMPLES))
+    }
 
     private def energy (Y : DenseMatrix[Int], X: DenseMatrix[Int]) : Double = {
         val N =  Y.rows
@@ -53,9 +53,10 @@ class Denoiser (imageMatrix : DenseMatrix[Int]) {
         if (!logfile) {
             var ctr = 0
             for ( _ <- 0 until MAX_BURNS) {
-                for ( i <- 1 until N-1)
-                    for ( j <- 1 until M-1)
-                        Y(i,j) = sample(i, j, Y, X)
+                for { 
+                    i <- 1 until N-1
+                    j <- 1 until M-1
+                } Y(i,j) = sample(i, j, Y, X)
                 ctr += 1
                 if( ctr % 10 == 0 )
                     println(s"Burn-in ${ctr} done!")
@@ -76,11 +77,9 @@ class Denoiser (imageMatrix : DenseMatrix[Int]) {
     def randomChoice [T] (values: Array[T]) : T = 
         values (Random.nextInt(values.length))
 
-    private def adjustImageIn(matrix: DenseMatrix[Int]) : DenseMatrix[Int] =  {
+    private def adjustImageIn(matrix: DenseMatrix[Int]) : DenseMatrix[Int] =
         matrix.map( elem => if ( elem > 128 ) 1 else -1 )
-    }
 
-    private def adjustImageOut(matrix: DenseMatrix[Int]) : DenseMatrix[Int] =  {
+    private def adjustImageOut(matrix: DenseMatrix[Int]) : DenseMatrix[Int] =
         matrix.map( elem => if ( elem < 0.5 ) 0 else 255 )
-    }
 }
