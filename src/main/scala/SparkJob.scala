@@ -39,7 +39,7 @@ object SparkJob  extends Job {
         var n = (pixelMatrix.cols) / subWidth // cols divisions
         var m = (pixelMatrix.rows) / subHeight // rows divisions
 
-        val mat = sc.parallelize(splitted, n*m)
+        val mat = sc.parallelize(splitted, n*m*2)
         val computed = compute(mat, processPipelne)
 
         val blockMat = new BlockMatrix(computed, subHeight, subWidth)
