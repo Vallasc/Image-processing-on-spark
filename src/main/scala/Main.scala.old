@@ -29,7 +29,7 @@ object Main {
     }
 
     def scalaImplementation = {
-        val image = new Image(new File("./data/testo_noisy.png"))
+        val image = new Image(new File("./data/nike_noisy.png"))
         //val image = new Image(new File("./data/nike.png"))
         val pixelArray = image.getPixelMatrix(true)
         println("Image")
@@ -181,3 +181,4 @@ object Main {
 // sbt assembly
 // spark-submit --deploy-mode client --master spark://localhost:7077 --total-executor-cores 1 --class Main --driver-memory 1G --executor-memory 1G target/scala-2.12/gibbs-image-denoiser-assembly-1.0.jar
 // spark-submit --deploy-mode client --master spark://localhost:7077 --class SparkJob jar/gibbs-image-denoiser-assembly-1.0.jar
+// spark-submit --deploy-mode client --class SparkJob jar/gibbs-image-denoiser-assembly-1.0.jar

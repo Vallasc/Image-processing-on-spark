@@ -8,7 +8,7 @@ import org.apache.spark.mllib.linalg.{Matrix, Matrices}
 import org.apache.spark.mllib.linalg.distributed.BlockMatrix
 
 object SparkJob  extends Job {
-    val inputImage = new Image(new File("./data/testo_noisy.png"))
+    val inputImage = new Image(new File("./data/nike_noisy.png"))
     val outputImage = new Image(new File("./data/OUT.png"))
 
     val padding = 10
@@ -39,7 +39,7 @@ object SparkJob  extends Job {
         var n = (pixelMatrix.cols) / subWidth // cols divisions
         var m = (pixelMatrix.rows) / subHeight // rows divisions
 
-        val mat = sc.parallelize(splitted, n*m*2)
+        val mat = sc.parallelize(splitted, n*m*3)
         val computed = compute(mat, processPipelne)
 
         val blockMat = new BlockMatrix(computed, subHeight, subWidth)
