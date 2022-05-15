@@ -6,20 +6,11 @@ version := "1.0"
 
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1"
-
-libraryDependencies  ++= Seq(
-  "org.scalanlp" %% "breeze" % "1.3",
-)
-
+libraryDependencies += "org.scalanlp" %% "breeze" % "1.3"
 libraryDependencies += "org.apache.spark" %% "spark-core" % "3.2.0" % "provided"
+libraryDependencies += "org.apache.spark" %% "spark-mllib" % "3.2.0" % "provided"
 
 assembly / assemblyMergeStrategy := {
- case PathList("META-INF", xs @ _*) => MergeStrategy.discard
- case x => MergeStrategy.first
-}
-
-/*assembly/assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x => val oldStrategy = ( assembly/assemblyMergeStrategy).value 
-            oldStrategy(x)
-}*/
+  case x => MergeStrategy.first
+}
