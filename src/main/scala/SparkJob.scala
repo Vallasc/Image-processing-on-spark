@@ -26,7 +26,7 @@ object SparkJob  extends Job {
     def run(): Unit = {
         val conf = new SparkConf().setAppName("GibbsDenoiser")
                                     //.setMaster("spark://localhost:7077")
-                                    .setMaster("local[*]")
+                                    //.setMaster("local[*]")
 
         val sc = new SparkContext(conf)
 
@@ -36,7 +36,10 @@ object SparkJob  extends Job {
         
         val splitted = splitImage(pixelMatrix)
 
-        val mat = sc.parallelize(splitted).cache()
+        var n = (pixelMatrix.cols) / subWidth // cols divisions
+        var m = (pixelMatrix.rows) / subHeight // rows divisions
+
+        val mat = sc.parallelize(splitted, n*m)
         val computed = compute(mat, processPipelne)
 
         val blockMat = new BlockMatrix(computed, subHeight, subWidth)
@@ -106,3 +109,5 @@ object SparkJob  extends Job {
         })
     }
 }
+
+// spark-submit --class SparkJob jar/gibbs-image-denoiser-assembly-1.0.jar
