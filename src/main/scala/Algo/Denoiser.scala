@@ -6,22 +6,19 @@ import breeze.linalg.InjectNumericOps
 import scala.util.Random
 import java.io.File
 
-class Denoiser (imageMatrix :DenseMatrix[Int], MAX_BURNS :Int = 100, MAX_SAMPLES :Int = 200) {
-    //val ITA = 0.8
-    //val BETA = 3
-
+class Denoiser (imageMatrix :DenseMatrix[Double], MAX_BURNS :Int = 100, MAX_SAMPLES :Int = 200) {
     val ITA = 0.9
     val BETA = 2
 
-    def this(imageMatrix :Array[Int], width :Int, height :Int) {
-        this(new DenseMatrix[Int](width, height, imageMatrix ))
+    def this(imageMatrix :Array[Double], width :Int, height :Int) {
+        this(new DenseMatrix[Double](width, height, imageMatrix ))
     }
 
-    def this(imageMatrix :Array[Int], width :Int, height :Int, MAX_BURNS :Int, MAX_SAMPLES :Int) {
-        this(new DenseMatrix[Int](width, height, imageMatrix, MAX_BURNS, MAX_SAMPLES))
+    def this(imageMatrix :Array[Double], width :Int, height :Int, MAX_BURNS :Int, MAX_SAMPLES :Int) {
+        this(new DenseMatrix[Double](width, height, imageMatrix, MAX_BURNS, MAX_SAMPLES))
     }
 
-    private def energy (Y : DenseMatrix[Int], X: DenseMatrix[Int]) : Double = {
+    private def energy (Y : DenseMatrix[Double], X: DenseMatrix[Double]) : Double = {
         val N =  Y.rows
         val M = Y.cols
         -1 * sum( X *:* Y ) 
@@ -29,8 +26,8 @@ class Denoiser (imageMatrix :DenseMatrix[Int], MAX_BURNS :Int = 100, MAX_SAMPLES
         + sum( Y( ::, 0 until M-1 ) *:* Y( ::, 1 to -1 ) )
     }
 
-    private def sample (i: Int, j: Int, Y: DenseMatrix[Int], X: DenseMatrix[Int]) : Int = {
-        val blanket = new DenseVector[Int]( Array(Y(i-1, j), Y(i, j-1), Y(i, j+1), Y(i+1, j), X(i, j)) )
+    private def sample (i: Int, j: Int, Y: DenseMatrix[Double], X: DenseMatrix[Double]) : Int = {
+        val blanket = new DenseVector[Double]( Array(Y(i-1, j), Y(i, j-1), Y(i, j+1), Y(i+1, j), X(i, j)) )
         
         val w = ITA * blanket(-1) + BETA * sum(blanket(0 until 4))
         val prob = 1 / (1 + math.exp(-2*w))
@@ -46,7 +43,7 @@ class Denoiser (imageMatrix :DenseMatrix[Int], MAX_BURNS :Int = 100, MAX_SAMPLES
         val N = Y.rows
         val M = Y.cols
         if (initialization == "neg")
-            Y = -1 *:* Y
+            Y = -1.0 *:* Y
         if (initialization == "rand")
             Y = DenseMatrix.tabulate(imageMatrix.rows, imageMatrix.cols){ (i,j) => randomChoice (Array(-1, 1)) }
 
@@ -77,9 +74,9 @@ class Denoiser (imageMatrix :DenseMatrix[Int], MAX_BURNS :Int = 100, MAX_SAMPLES
     def randomChoice [T] (values: Array[T]) : T = 
         values (Random.nextInt(values.length))
 
-    private def adjustImageIn(matrix: DenseMatrix[Int]) : DenseMatrix[Int] =
-        matrix.map( elem => if ( elem > 128 ) 1 else -1 )
+    private def adjustImageIn(matrix: DenseMatrix[Double]) : DenseMatrix[Double] =
+        matrix.map( elem => if ( elem > 128 ) 1.0 else -1.0 )
 
-    private def adjustImageOut(matrix: DenseMatrix[Int]) : DenseMatrix[Int] =
-        matrix.map( elem => if ( elem < 0.5 ) 0 else 255 )
+    private def adjustImageOut(matrix: DenseMatrix[Double]) : DenseMatrix[Double] =
+        matrix.map( elem => if ( elem < 0.5 ) 0.0 else 255.0 )
 }

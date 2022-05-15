@@ -7,6 +7,7 @@ import breeze.linalg.CSCMatrix
 import scala.collection.GenSeq
 import breeze.linalg.Matrix
 import org.apache.spark.rdd.RDD
+import org.apache.spark.mllib.linalg.{Matrix => MLMatrix, Matrices}
 
 object Main {
     val padding = 20
@@ -14,6 +15,10 @@ object Main {
     val subWidth = 200
 
     def main(args: Array[String]): Unit = {
+
+
+        // Create a dense matrix ((1.0, 2.0), (3.0, 4.0), (5.0, 6.0))
+        val dm: MLMatrix = Matrices.dense(3, 2, Array(1.0, 3.0, 5.0, 2.0, 4.0, 6.0))
         println("Start")
         
         //scalaImplementation
@@ -98,7 +103,7 @@ object Main {
     def denoise(matrix: DenseMatrix[Int]) =
         new Denoiser( matrix, 150 ).run()
 
-    def conv(matrix: DenseMatrix[Int], convMatrix: DenseMatrix[Double]) =
+    def conv(matrix: DenseMatrix[Double], convMatrix: DenseMatrix[Double]) =
         new Convolution( matrix,  convMatrix).run()
 
     def toDenseMatrix(matrix: Matrix[Int]) =
@@ -175,3 +180,4 @@ object Main {
 
 // sbt assembly
 // spark-submit --deploy-mode client --master spark://localhost:7077 --total-executor-cores 1 --class Main --driver-memory 1G --executor-memory 1G target/scala-2.12/gibbs-image-denoiser-assembly-1.0.jar
+// spark-submit --deploy-mode client --master spark://localhost:7077 --class Main jar/gibbs-image-denoiser-assembly-1.0.jar
