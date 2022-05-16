@@ -12,8 +12,8 @@ object SparkJob  extends Job {
     val outputImage = new Image(new File("./data/OUT.png"))
 
     val padding = 10
-    val subHeight = 300
-    val subWidth = 300
+    val subHeight = 600
+    val subWidth = 600
 
     override val denoiserRuns = 100
 
