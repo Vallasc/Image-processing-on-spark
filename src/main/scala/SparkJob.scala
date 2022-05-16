@@ -8,16 +8,17 @@ import org.apache.spark.mllib.linalg.{Matrix, Matrices}
 import org.apache.spark.mllib.linalg.distributed.BlockMatrix
 
 object SparkJob  extends Job {
-    val inputImage = new Image(new File("./data/nike_noisy.png"))
+    val inputImage = new Image(new File("./data/testo_noisy.png"))
     val outputImage = new Image(new File("./data/OUT.png"))
 
     val padding = 10
-    val subHeight = 500
-    val subWidth = 500
+    val subHeight = 100
+    val subWidth = 100
+
+    override val denoiserRuns = 100
 
     def main(args: Array[String]): Unit = {
         println("Start")
-
         val t = Utils.time(run)
         println("Time: " + t)
         println("End")
@@ -25,8 +26,9 @@ object SparkJob  extends Job {
 
     def run(): Unit = {
         val conf = new SparkConf().setAppName("GibbsDenoiser")
-                                    //.setMaster("spark://localhost:7077")
-                                    //.setMaster("local[*]")
+                                    .setMaster("local[*]")
+        conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+        conf.registerKryoClasses(Array(classOf[Tuple2[Tuple2[Int, Int], Matrix]]))
 
         val sc = new SparkContext(conf)
 
@@ -39,7 +41,7 @@ object SparkJob  extends Job {
         var n = (pixelMatrix.cols) / subWidth // cols divisions
         var m = (pixelMatrix.rows) / subHeight // rows divisions
 
-        val mat = sc.parallelize(splitted, n*m*3)
+        val mat = sc.parallelize(splitted, n * m * 100)
         val computed = compute(mat, processPipelne)
 
         val blockMat = new BlockMatrix(computed, subHeight, subWidth)
@@ -91,11 +93,6 @@ object SparkJob  extends Job {
             val xToPadded = xFromPadded + subWidth + padding*2 -1
             val yFromPadded = p2 * subHeight
             val yToPadded = yFromPadded + subHeight + padding*2 -1
-            // println("xfrom" + xFromPadded)
-            // println("xto" + xToPadded)
-            // println("yfrom" + yFromPadded)
-            // println("yto" + yToPadded)
-            // println()
             val matrix = paddedMatrix(yFromPadded to yToPadded, xFromPadded to xToPadded).copy
             ((p2, p1), Utils.matrixFromBreeze(matrix))
         }
@@ -110,4 +107,4 @@ object SparkJob  extends Job {
     }
 }
 
-// spark-submit --class SparkJob jar/gibbs-image-denoiser-assembly-1.0.jar
+// spark-submit --class SparkJob --deploy-mode client jar/gibbs-image-denoiser-assembly-1.0.jar

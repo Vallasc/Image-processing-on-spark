@@ -3,16 +3,18 @@ import breeze.linalg.DenseMatrix
 trait Job {
     val inputImage: Image
     val outputImage: Image
-    
+
     val padding: Int
     val subHeight: Int
     val subWidth: Int
+
+    val denoiserRuns: Int = 100
 
     def main(args: Array[String]): Unit
     def run(): Unit
 
     def denoise(matrix: DenseMatrix[Double]) =
-        new Denoiser( matrix, 150 ).run()
+        new Denoiser( matrix, denoiserRuns ).run()
 
     def conv(matrix: DenseMatrix[Double], convMatrix: DenseMatrix[Double]) : DenseMatrix[Double] =
         new Convolution( matrix,  convMatrix).run()
