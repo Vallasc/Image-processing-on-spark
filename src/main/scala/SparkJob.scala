@@ -26,7 +26,7 @@ object SparkJob  extends Job {
 
     def run(): Unit = {
         val conf = new SparkConf().setAppName("GibbsDenoiser")
-                                    .setMaster("local[*]")
+                                    //.setMaster("local[*]")
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         conf.registerKryoClasses(Array(classOf[Tuple2[Tuple2[Int, Int], Matrix]]))
 
