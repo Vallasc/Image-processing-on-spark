@@ -6,22 +6,47 @@ import org.apache.spark.rdd.RDD
 
 import org.apache.spark.mllib.linalg.{Matrix, Matrices}
 import org.apache.spark.mllib.linalg.distributed.BlockMatrix
+import java.io.PrintWriter
 
 object SparkJob  extends Job {
-    val inputImage = new Image(new File("./data/testo_noisy.png"))
-    val outputImage = new Image(new File("./data/OUT.png"))
+    var inputImage = new Image(new File("./data/testo_noisy.png"))
+    var outputImage = new Image(new File("./data/out.png"))
+    var outputJson = new File("./data/report.json")
 
-    val padding = 10
-    val subHeight = 600
-    val subWidth = 600
+    var padding = 10
+    var subHeight = 300
+    var subWidth = 300
+    var denoiserRuns = 100
 
-    override val denoiserRuns = 100
+    var debug = 1
 
+    val usage = """
+        Usage: [--sub_matrix_size] [--padding] [--denoiser_runs] [--debug] [--output_file_json] [--output_file_image] input_file_image
+    """
     def main(args: Array[String]): Unit = {
+        // Check arguments
+        if (args.length == 0) println(usage)
+        args.sliding(2, 2).toList.collect {
+            case Array("--sub_matrix_size", m_size: String) => {
+                subHeight = m_size.toInt
+                subWidth = m_size.toInt
+            }
+            case Array("--padding", p: String) => padding = p.toInt
+            case Array("--denoiser_runs", runs: String) => denoiserRuns = runs.toInt
+            case Array("--debug", d: String) => debug = d.toInt
+            case Array("--output_file_json", out: String) => outputJson = new File(s"$out")
+            case Array("--output_file_image", out: String) => outputImage = new Image(new File(s"$out"))
+            case Array(out: String) => inputImage = new Image(new File(s"$out"))
+        }
+        
         println("Start")
         val t = Utils.time(run)
-        println("Time: " + t)
-        println("End")
+        if(debug > 0)
+            println(s"Time: $t ms")
+
+        val pw = new PrintWriter(outputJson)
+        pw.write("{\"time\":" + t +"}")
+        pw.close
     }
 
     def run(): Unit = {
@@ -80,11 +105,12 @@ object SparkJob  extends Job {
         // Set padded image
         paddedMatrix(padding to padding + pixelMatrix.rows -1, padding to padding + pixelMatrix.cols -1) := pixelMatrix
         
-        println("x sub-matrix: " + n)
-        println("y sun-matrix: " + m)
-
-        println("matrix x size: " + paddedMatrix.rows)
-        println("matrix y size: " + paddedMatrix.cols)
+        if(debug > 0) {
+            println("matrix x size: " + paddedMatrix.rows)
+            println("matrix y size: " + paddedMatrix.cols)
+            println("x sub-matrix: " + n)
+            println("y sub-matrix: " + m)
+        }
         for { 
             p1 <- 0 until n // X
             p2 <- 0 until m // Y
@@ -105,6 +131,7 @@ object SparkJob  extends Job {
             (element._1, Utils.matrixFromBreeze(out))
         })
     }
-}
 
-// spark-submit --class SparkJob --deploy-mode client jar/gibbs-image-denoiser-assembly-1.0.jar
+}
+// sbt "runMain SparkJob ./data/nike_noisy.png"
+// spark-submit --class SparkJob ./jar/binary.jar ./data/nike_noisy.png
