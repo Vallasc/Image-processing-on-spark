@@ -1,14 +1,14 @@
 import breeze.linalg.DenseMatrix
 
 trait Job {
-    val inputImage: Image
-    val outputImage: Image
+    var inputImage: Image
+    var outputImage: Image
 
-    val padding: Int
-    val subHeight: Int
-    val subWidth: Int
+    var padding: Int
+    var subHeight: Int
+    var subWidth: Int
 
-    val denoiserRuns: Int = 100
+    var denoiserRuns: Int
 
     def main(args: Array[String]): Unit
     def run(): Unit

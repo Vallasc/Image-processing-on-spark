@@ -3,12 +3,11 @@ import org.apache.spark.mllib.linalg.{Matrix, DenseMatrix, SparseMatrix, Matrice
 
 object Utils {
 
-    def time[R](block: => R): R = {
+    def time[R](block: => R): Long = {
         val t0 = System.nanoTime()
         val result = block    // call-by-name
         val t1 = System.nanoTime()
-        println("Elapsed time: " + (t1 - t0)/1000000 + "ms")
-        result
+        (t1 - t0)/1000000 
     }
 
     def matrixAsBreeze (matrix: Matrix): BDM[Double] = {

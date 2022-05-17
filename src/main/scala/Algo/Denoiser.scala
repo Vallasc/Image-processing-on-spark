@@ -36,7 +36,7 @@ class Denoiser (imageMatrix :DenseMatrix[Double], MAX_BURNS :Int = 100, MAX_SAMP
     }
 
     def run (initialization : String = "same", logfile : Boolean = false) = {
-        println(s"########## Working ##########")
+        println("Denoiser: working")
         println(s"Initialization : $initialization")
         val X = adjustImageIn(imageMatrix)
         var Y = X.copy
@@ -68,6 +68,7 @@ class Denoiser (imageMatrix :DenseMatrix[Double], MAX_BURNS :Int = 100, MAX_SAMP
                     print(s"Burn-in ${ctr} done!")
             }*/
         }
+        println("Denoiser: done")
         adjustImageOut(Y)
     }
 

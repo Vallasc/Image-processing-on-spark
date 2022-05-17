@@ -6,13 +6,13 @@ import org.apache.spark.mllib.linalg.distributed.CoordinateMatrix
 
 object ConvJob extends Job {
 
-    val inputImage = new Image(new File("./data/testo_noisy.png"))
-    val outputImage = new Image(new File("./data/OUT.png"))
+    var inputImage = new Image(new File("./data/testo_noisy.png"))
+    var outputImage = new Image(new File("./data/OUT.png"))
 
-    val padding = 10
-    val subHeight = 100
-    val subWidth = 100
-
+    var padding = 10
+    var subHeight = 100
+    var subWidth = 100
+      var denoiserRuns = 100
   override def main(args: Array[String]): Unit = {
         println("Start")
         val t = Utils.time(run)
