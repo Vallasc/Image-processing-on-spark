@@ -57,4 +57,4 @@ def do_work():
     return file_out_path
 
 if __name__ == '__main__':
-    run(host='localhost', port=9090)
+    run(host='0.0.0.0', port=9090)
