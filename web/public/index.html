@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    </head>
+    <body>            
+    <header class="container">
+        <nav>
+            <ul>
+              <li><strong>Gibbs image deonoiser on a Spark cluster</strong></li>
+            </ul>
+            <ul>
+                <li><a href="#" role="button">Single Image</a></li>
+                <li><a href="#" role="button">Benchmark</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="container">
+        <input id = "file"  type = "file">
+        <div id = "main-block" style = "display: none">
+            <div class="grid">
+                <div>
+                    <h5>Input image</h5>
+                <img id="img-before" /> 
+                </div>
+                <div>
+                    <h5>Output image</h5>
+                    <img id="img-after" />
+                </div>
+            </div>
+            <br>
+            <button id="start" aria-busy="false">Start Elaboration</button>
+        </div>
+        <br>
+        <div id="result"></div>
+    </main>
+        <script type="text/javascript">
+            function get(id) {
+                return document.getElementById(id)
+            }
+
+            const fileInput = get('file')
+            const buttonStart = get("start")
+            const inputImage = get('img-before')
+            const outputImage = get('img-after')
+            let outFileName = "_"
+
+
+            function startPolling () {
+                outputImage.src = inputImage.src
+                outputImage.style.filter = 'blur(5px)'
+                buttonStart.ariaBusy = true
+                buttonStart.innerText = "Elaborating..."
+                try {
+                    fetch(outFileName + ".json").then(async (resp) => {
+                        console.log(resp)
+                        if( resp.status != 200 ) {
+                            setTimeout(() => startPolling(), 2000)
+                            return
+                        }
+                        let json = await resp.text()
+                        get("result").innerText = json
+                        outputImage.src = outFileName
+                        outputImage.style.filter = ''
+                        buttonStart.ariaBusy = false
+                        buttonStart.innerText = "Start Elaboration"
+                    })
+                } catch (e) {}
+            }
+
+            buttonStart.onclick = () => {
+                // Make post request
+                let file = fileInput.files[0]
+                let data = new FormData()
+                data.append('image', file, file.name)
+
+                fetch("/upload", {
+                    method: 'POST',
+                    body: data
+                }).then((resp) => {
+                    //return resp.json(); // or resp.text() or whatever the server sends
+                    resp.text().then((data) => {
+                        get("result").innerText = data
+                        outFileName = data
+                        startPolling()
+                    })
+                }).then((body) => {
+                    // TODO handle body
+                }).catch((error) => {
+                    // TODO handle error
+                })
+            }
+
+            // Load image
+            fileInput.onchange = () => {
+                const selectedFile = fileInput.files[0]
+                console.log(selectedFile)
+                let reader = new FileReader()
+                reader.readAsDataURL(selectedFile)
+                reader.onload = (e) => {
+                    let image = new Image()
+                    image.src = e.target.result
+                    image.onload = () => {
+                        inputImage.src = image.src
+                        outputImage.src = image.src
+                        outputImage.style.filter = 'blur(5px)'
+                        get("main-block").style.display = "block"
+                    }
+                }
+            }
+        </script>
+    </body>
+</html>
+
