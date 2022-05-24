@@ -8,6 +8,7 @@ libraryDependencies += "org.scalanlp" %% "breeze" % "1.3"
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % "3.2.0" % "provided"
 libraryDependencies += "org.apache.spark" %% "spark-mllib" % "3.2.0" % "provided"
+libraryDependencies += "com.google.cloud" % "google-cloud-nio" % "0.123.10"
 
 
 assembly / assemblyOutputPath := file(s"./jar/binary.jar")
