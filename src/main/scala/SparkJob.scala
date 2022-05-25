@@ -6,12 +6,14 @@ import org.apache.spark.rdd.RDD
 
 import org.apache.spark.mllib.linalg.{Matrix, Matrices}
 import org.apache.spark.mllib.linalg.distributed.BlockMatrix
+import org.apache.spark.ml.image.ImageSchema._
 import java.io.PrintWriter
+import org.apache.hadoop.fs.{FileSystem, Path}
 
 object SparkJob  extends Job {
-    var inputImage = new Image(new File("./data/testo_noisy.png"))
-    var outputImage = new Image(new File("./data/out.png"))
-    var outputJson = new File("./data/report.json")
+    var inputImage = "./data/img_noisy.png"
+    var outputImage = "./data/out.png"
+    var outputJson = "./data/report.json"
 
     var padding = 10
     var subHeight = 300
@@ -34,9 +36,9 @@ object SparkJob  extends Job {
             case Array("--padding", p: String) => padding = p.toInt
             case Array("--denoiser_runs", runs: String) => denoiserRuns = runs.toInt
             case Array("--debug", d: String) => debug = d.toInt
-            case Array("--output_file_json", out: String) => outputJson = new File(s"$out")
-            case Array("--output_file_image", out: String) => outputImage = new Image(new File(s"$out"))
-            case Array(out: String) => inputImage = new Image(new File(s"$out"))
+            case Array("--output_file_json", out: String) => outputJson = out
+            case Array("--output_file_image", out: String) => outputImage = out
+            case Array(out: String) => inputImage = out
         }
         
         println("Start")
@@ -47,6 +49,7 @@ object SparkJob  extends Job {
         val pw = new PrintWriter(outputJson)
         pw.write("{\"time\":" + t +"}")
         pw.close
+
     }
 
     def run(): Unit = {
@@ -56,9 +59,19 @@ object SparkJob  extends Job {
         conf.registerKryoClasses(Array(classOf[Tuple2[Tuple2[Int, Int], Matrix]]))
 
         val sc = new SparkContext(conf)
+        //val spark: SparkSession = SparkSession.builder().config(conf).getOrCreate()
+        
+        val hadoopfs : FileSystem = FileSystem.get(sc.hadoopConfiguration)
 
-        val pixelArray = inputImage.getPixelMatrix(true)
-        val pixelMatrix = new BDM[Double](inputImage.width, inputImage.height, pixelArray.map(_.toDouble))
+        //read the file as Input byte stream
+        val hadoopfsStreem = hadoopfs.open(new Path(inputImage))  
+        
+        // val image = spark.read.format("image").load(inputImage)
+        // val img = image.first()(0)
+        // println(img)
+        val image = new Image(hadoopfsStreem)
+        val pixelArray = image.getPixelMatrix(true)
+        val pixelMatrix = new BDM[Double](image.width, image.height, pixelArray.map(_.toDouble))
 
         
         val splitted = splitImage(pixelMatrix)
@@ -72,9 +85,11 @@ object SparkJob  extends Job {
         val blockMat = new BlockMatrix(computed, subHeight, subWidth)
         val out = Utils.matrixAsBreeze(blockMat.toLocalMatrix())
         val cleaned = out(0 to pixelMatrix.rows -1, 0 to pixelMatrix.cols -1).copy
+        println("It's all ok")
+        //outputImage.setPixelMatrix(cleaned.data.map(_.toInt), cleaned.rows, cleaned.cols, true)
+        //outputImage.saveImage*/
 
-        outputImage.setPixelMatrix(cleaned.data.map(_.toInt), cleaned.rows, cleaned.cols, true)
-        outputImage.saveImage
+        //edges.partitionBy(new RangePartitioner(SparkContextSingleton.DEFAULT_PARALLELISM, edges)).persist(StorageLevel.MEMORY_AND_DISK)
     }
 
 

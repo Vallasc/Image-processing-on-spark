@@ -6,8 +6,9 @@ import java.awt.image.WritableRaster
 import java.awt.image.SampleModel
 import java.awt.image.DataBufferInt
 import java.awt.image.ColorModel
+import java.io.InputStream
 
-class Image(imageFile: File) {
+class Image(imageStream: InputStream) {
 
     var image: BufferedImage = null
     var width: Int = 0
@@ -16,7 +17,7 @@ class Image(imageFile: File) {
     var pixelMatrix: Array[Int] = null
 
     def getPixelMatrix(greyScale: Boolean = false) : Array[Int] = {
-        image = ImageIO.read(imageFile)
+        image = ImageIO.read(imageStream)
         width = image.getWidth
         height = image.getHeight
         hasAlphaChannel = image.getAlphaRaster != null
@@ -54,17 +55,17 @@ class Image(imageFile: File) {
             this.pixelMatrix = pixelMatrix
     }
 
-    def saveImage = {
-        val buffer: DataBufferInt = new DataBufferInt(pixelMatrix, pixelMatrix.length)
+    // def saveImage = {
+    //     val buffer: DataBufferInt = new DataBufferInt(pixelMatrix, pixelMatrix.length)
 
-        val bandMasks: Array[Int] = Array(0xFF0000, 0xFF00, 0xFF, 0xFF000000) // ARGB (yes, ARGB, as the masks are R, G, B, A always) order
-        val raster: WritableRaster = Raster.createPackedRaster(buffer, width, height, width, bandMasks, null)
+    //     val bandMasks: Array[Int] = Array(0xFF0000, 0xFF00, 0xFF, 0xFF000000) // ARGB (yes, ARGB, as the masks are R, G, B, A always) order
+    //     val raster: WritableRaster = Raster.createPackedRaster(buffer, width, height, width, bandMasks, null)
 
-        val cm: ColorModel = ColorModel.getRGBdefault()
-        val bufferedImage = new BufferedImage(cm, raster, cm.isAlphaPremultiplied(), null)
-        bufferedImage.setData(raster)
-        ImageIO.write(bufferedImage, "PNG", imageFile)
-    }
+    //     val cm: ColorModel = ColorModel.getRGBdefault()
+    //     val bufferedImage = new BufferedImage(cm, raster, cm.isAlphaPremultiplied(), null)
+    //     bufferedImage.setData(raster)
+    //     ImageIO.write(bufferedImage, "PNG", imageFile)
+    // }
 
     // 0.3 * R + 0.6 * G + 0.1 * B
     private def fromARGBtoGreyScale(pixel: Int) : Int = {
