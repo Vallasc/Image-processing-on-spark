@@ -7,8 +7,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.linalg.{Matrix, Matrices}
 import org.apache.spark.mllib.linalg.distributed.BlockMatrix
 import java.io.PrintWriter
-import java.nio.file.Paths
-import java.net.URI
 
 object SparkJob  extends Job {
     var inputImage = new Image(new File("./data/testo_noisy.png"))
@@ -36,11 +34,11 @@ object SparkJob  extends Job {
             case Array("--padding", p: String) => padding = p.toInt
             case Array("--denoiser_runs", runs: String) => denoiserRuns = runs.toInt
             case Array("--debug", d: String) => debug = d.toInt
-            case Array("--output_file_json", out: String) => outputJson = Paths.get(URI.create(s"$out")).toFile()
-            case Array("--output_file_image", out: String) => outputImage = new Image(Paths.get(URI.create(s"$out")).toFile())
-            case Array(out: String) => inputImage = new Image(Paths.get(URI.create(s"$out")).toFile())
+            case Array("--output_file_json", out: String) => outputJson = new File(s"$out")
+            case Array("--output_file_image", out: String) => outputImage = new Image(new File(s"$out"))
+            case Array(out: String) => inputImage = new Image(new File(s"$out"))
         }
-
+        
         println("Start")
         val t = Utils.time(run)
         if(debug > 0)
