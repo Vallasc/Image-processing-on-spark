@@ -1,8 +1,8 @@
 import breeze.linalg.DenseMatrix
 
 trait Job {
-    var inputImage: String
-    var outputImage: String
+    var inputPathImage: String
+    var outputPathImage: String
 
     var padding: Int
     var subHeight: Int

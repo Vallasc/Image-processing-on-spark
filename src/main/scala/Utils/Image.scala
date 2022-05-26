@@ -6,21 +6,19 @@ import java.awt.image.WritableRaster
 import java.awt.image.SampleModel
 import java.awt.image.DataBufferInt
 import java.awt.image.ColorModel
+import java.io.OutputStream
 import java.io.InputStream
 
-class Image(imageStream: InputStream) {
-
-    var image: BufferedImage = null
+class Image {
     var width: Int = 0
     var height: Int = 0
-    var hasAlphaChannel = false
-    var pixelMatrix: Array[Int] = null
+    var pixelMatrix: Array[Int] = Array()
 
-    def getPixelMatrix(greyScale: Boolean = false) : Array[Int] = {
-        image = ImageIO.read(imageStream)
+    def getPixelMatrix(inputStream: InputStream, greyScale: Boolean = false) : Array[Int] = {
+        val image = ImageIO.read(inputStream)
         width = image.getWidth
         height = image.getHeight
-        hasAlphaChannel = image.getAlphaRaster != null
+        val hasAlphaChannel = image.getAlphaRaster != null
 
         val outMatrix: Array[Int] = new Array[Int](width * height)
         pixelMatrix = new Array[Int](width * height)
@@ -55,17 +53,17 @@ class Image(imageStream: InputStream) {
             this.pixelMatrix = pixelMatrix
     }
 
-    // def saveImage = {
-    //     val buffer: DataBufferInt = new DataBufferInt(pixelMatrix, pixelMatrix.length)
+    def saveImage(outputStream: OutputStream) = {
+        val buffer: DataBufferInt = new DataBufferInt(pixelMatrix, pixelMatrix.length)
 
-    //     val bandMasks: Array[Int] = Array(0xFF0000, 0xFF00, 0xFF, 0xFF000000) // ARGB (yes, ARGB, as the masks are R, G, B, A always) order
-    //     val raster: WritableRaster = Raster.createPackedRaster(buffer, width, height, width, bandMasks, null)
+        val bandMasks: Array[Int] = Array(0xFF0000, 0xFF00, 0xFF, 0xFF000000) // ARGB (yes, ARGB, as the masks are R, G, B, A always) order
+        val raster: WritableRaster = Raster.createPackedRaster(buffer, width, height, width, bandMasks, null)
 
-    //     val cm: ColorModel = ColorModel.getRGBdefault()
-    //     val bufferedImage = new BufferedImage(cm, raster, cm.isAlphaPremultiplied(), null)
-    //     bufferedImage.setData(raster)
-    //     ImageIO.write(bufferedImage, "PNG", imageFile)
-    // }
+        val cm: ColorModel = ColorModel.getRGBdefault()
+        val bufferedImage = new BufferedImage(cm, raster, cm.isAlphaPremultiplied(), null)
+        bufferedImage.setData(raster)
+        ImageIO.write(bufferedImage, "PNG", outputStream)
+    }
 
     // 0.3 * R + 0.6 * G + 0.1 * B
     private def fromARGBtoGreyScale(pixel: Int) : Int = {

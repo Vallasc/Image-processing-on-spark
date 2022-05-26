@@ -8,12 +8,13 @@ import org.apache.spark.mllib.linalg.{Matrix, Matrices}
 import org.apache.spark.mllib.linalg.distributed.BlockMatrix
 import org.apache.spark.ml.image.ImageSchema._
 import java.io.PrintWriter
-import org.apache.hadoop.fs.{FileSystem, Path}
+import _root_.Utils.FileUtils
 
 object SparkJob  extends Job {
-    var inputImage = "./data/img_noisy.png"
-    var outputImage = "./data/out.png"
-    var outputJson = "./data/report.json"
+    var inputPathImage = "file:///C://data/img_noisy.png"
+    var outputPathImage = "file:///C://data/out.png"
+    var outputPathJson = "file:///C://data/report.json"
+    var gcbucket : Option[String] = None
 
     var padding = 10
     var subHeight = 300
@@ -23,7 +24,7 @@ object SparkJob  extends Job {
     var debug = 1
 
     val usage = """
-        Usage: [--sub_matrix_size] [--padding] [--denoiser_runs] [--debug] [--output_file_json] [--output_file_image] input_file_image
+        Usage: [--sub_matrix_size] [--padding] [--gcbucket] [--denoiser_runs] [--debug] [--output_file_json] [--output_file_image] input_file_image
     """
     def main(args: Array[String]): Unit = {
         // Check arguments
@@ -34,11 +35,12 @@ object SparkJob  extends Job {
                 subWidth = m_size.toInt
             }
             case Array("--padding", p: String) => padding = p.toInt
+            case Array("--gcbucket", out: String) => gcbucket = Some(out)
             case Array("--denoiser_runs", runs: String) => denoiserRuns = runs.toInt
             case Array("--debug", d: String) => debug = d.toInt
-            case Array("--output_file_json", out: String) => outputJson = out
-            case Array("--output_file_image", out: String) => outputImage = out
-            case Array(out: String) => inputImage = out
+            case Array("--output_file_json", out: String) => outputPathJson = out
+            case Array("--output_file_image", out: String) => outputPathImage = out
+            case Array(out: String) => inputPathImage = out
         }
         
         println("Start")
@@ -46,34 +48,26 @@ object SparkJob  extends Job {
         if(debug > 0)
             println(s"Time: $t ms")
 
-        val pw = new PrintWriter(outputJson)
-        pw.write("{\"time\":" + t +"}")
-        pw.close
+        // val pw = new PrintWriter(outputPathJson)
+        // pw.write("{\"time\":" + t +"}")
+        // pw.close
 
     }
 
     def run(): Unit = {
         val conf = new SparkConf().setAppName("GibbsDenoiser")
-                                    //.setMaster("local[*]")
+                                    .setMaster("local[*]")
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         conf.registerKryoClasses(Array(classOf[Tuple2[Tuple2[Int, Int], Matrix]]))
 
         val sc = new SparkContext(conf)
-        //val spark: SparkSession = SparkSession.builder().config(conf).getOrCreate()
-        
-        val hadoopfs : FileSystem = FileSystem.get(sc.hadoopConfiguration)
 
-        //read the file as Input byte stream
-        val hadoopfsStreem = hadoopfs.open(new Path(inputImage))  
-        
-        // val image = spark.read.format("image").load(inputImage)
-        // val img = image.first()(0)
-        // println(img)
-        val image = new Image(hadoopfsStreem)
-        val pixelArray = image.getPixelMatrix(true)
-        val pixelMatrix = new BDM[Double](image.width, image.height, pixelArray.map(_.toDouble))
+        val inputImage = new Image()
+        val is = FileUtils.getInputStream(inputPathImage)
+        val pixelArray = inputImage.getPixelMatrix(is, true)
+        is.close()
+        val pixelMatrix = new BDM[Double](inputImage.width, inputImage.height, pixelArray.map(_.toDouble))
 
-        
         val splitted = splitImage(pixelMatrix)
 
         var n = (pixelMatrix.cols) / subWidth // cols divisions
@@ -86,8 +80,12 @@ object SparkJob  extends Job {
         val out = Utils.matrixAsBreeze(blockMat.toLocalMatrix())
         val cleaned = out(0 to pixelMatrix.rows -1, 0 to pixelMatrix.cols -1).copy
         println("It's all ok")
-        //outputImage.setPixelMatrix(cleaned.data.map(_.toInt), cleaned.rows, cleaned.cols, true)
-        //outputImage.saveImage*/
+
+        val os = FileUtils.getOutputStream(outputPathImage)
+        val outputImage = new Image()
+        outputImage.setPixelMatrix(cleaned.data.map(_.toInt), cleaned.rows, cleaned.cols, true)
+        outputImage.saveImage(os)
+        os.close()
 
         //edges.partitionBy(new RangePartitioner(SparkContextSingleton.DEFAULT_PARALLELISM, edges)).persist(StorageLevel.MEMORY_AND_DISK)
     }
