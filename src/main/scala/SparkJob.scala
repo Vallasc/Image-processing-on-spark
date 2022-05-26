@@ -11,10 +11,9 @@ import java.io.PrintWriter
 import _root_.Utils.FileUtils
 
 object SparkJob  extends Job {
-    var inputPathImage = "file:///C://data/img_noisy.png"
+    var inputPathImage = "file:///C://data/img_noisy1.png"
     var outputPathImage = "file:///C://data/out.png"
     var outputPathJson = "file:///C://data/report.json"
-    var gcbucket : Option[String] = None
 
     var padding = 10
     var subHeight = 300
@@ -23,19 +22,19 @@ object SparkJob  extends Job {
 
     var debug = 1
 
-    val usage = """
-        Usage: [--sub_matrix_size] [--padding] [--gcbucket] [--denoiser_runs] [--debug] [--output_file_json] [--output_file_image] input_file_image
-    """
+    val usage = "\nUsage: [--sub_matrix_size] [--padding] [--denoiser_runs] [--debug] [--output_file_json] [--output_file_image] input_file_image\n"
     def main(args: Array[String]): Unit = {
         // Check arguments
-        if (args.length == 0) println(usage)
+        if (args.length % 2 == 0) {
+            println(usage)
+            return
+        }
         args.sliding(2, 2).toList.collect {
             case Array("--sub_matrix_size", m_size: String) => {
                 subHeight = m_size.toInt
                 subWidth = m_size.toInt
             }
             case Array("--padding", p: String) => padding = p.toInt
-            case Array("--gcbucket", out: String) => gcbucket = Some(out)
             case Array("--denoiser_runs", runs: String) => denoiserRuns = runs.toInt
             case Array("--debug", d: String) => debug = d.toInt
             case Array("--output_file_json", out: String) => outputPathJson = out
@@ -43,7 +42,13 @@ object SparkJob  extends Job {
             case Array(out: String) => inputPathImage = out
         }
         
-        println("Start")
+        println(s"\nInput file: ${inputPathImage}")
+        println(s"Output file: ${outputPathImage}")
+        println(s"Output json: ${outputPathJson}")
+        println(s"Sub matrix size: ${subHeight}")
+        println(s"Paddding: ${padding}")
+
+        println("\nStart")
         val t = Utils.time(run)
         if(debug > 0)
             println(s"Time: $t ms")
@@ -56,7 +61,7 @@ object SparkJob  extends Job {
 
     def run(): Unit = {
         val conf = new SparkConf().setAppName("GibbsDenoiser")
-                                    .setMaster("local[*]")
+                                    //.setMaster("local[*]")
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         conf.registerKryoClasses(Array(classOf[Tuple2[Tuple2[Int, Int], Matrix]]))
 
