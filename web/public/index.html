@@ -49,10 +49,6 @@
 
 
             function startPolling () {
-                outputImage.src = inputImage.src
-                outputImage.style.filter = 'blur(5px)'
-                buttonStart.ariaBusy = true
-                buttonStart.innerText = "Elaborating..."
                 try {
                     fetch(outFileName + ".json").then(async (resp) => {
                         console.log(resp)
@@ -71,6 +67,11 @@
             }
 
             buttonStart.onclick = () => {
+                outputImage.src = inputImage.src
+                outputImage.style.filter = 'blur(5px)'
+                buttonStart.ariaBusy = true
+                buttonStart.innerText = "Elaborating..."
+                
                 // Make post request
                 let file = fileInput.files[0]
                 let data = new FormData()
