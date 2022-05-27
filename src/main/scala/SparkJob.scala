@@ -68,7 +68,7 @@ object SparkJob  extends Job {
         val sc = new SparkContext(conf)
 
         val inputImage = new Image()
-        val is = FileUtils.getInputStream(inputPathImage)
+        val is = FileUtils.getInputStream(inputPathImage, true)
         val pixelArray = inputImage.getPixelMatrix(is, true)
         is.close()
         val pixelMatrix = new BDM[Double](inputImage.width, inputImage.height, pixelArray.map(_.toDouble))
