@@ -9,6 +9,7 @@ import org.apache.spark.mllib.linalg.distributed.BlockMatrix
 import org.apache.spark.ml.image.ImageSchema._
 import java.io.PrintWriter
 import _root_.Utils.FileUtils
+import java.nio.charset.Charset
 
 object SparkJob  extends Job {
     var inputPathImage = "file:///C://data/img_noisy1.png"
@@ -53,9 +54,10 @@ object SparkJob  extends Job {
         if(debug > 0)
             println(s"Time: $t ms")
 
-        // val pw = new PrintWriter(outputPathJson)
-        // pw.write("{\"time\":" + t +"}")
-        // pw.close
+        val json = "{\"time\":" + t +"}"
+        val os = FileUtils.getOutputStream(outputPathJson)
+        os.write(json.getBytes(Charset.forName("UTF-8")))
+        os.close()
 
     }
 
@@ -68,7 +70,7 @@ object SparkJob  extends Job {
         val sc = new SparkContext(conf)
 
         val inputImage = new Image()
-        val is = FileUtils.getInputStream(inputPathImage, true)
+        val is = FileUtils.getInputStream(inputPathImage)
         val pixelArray = inputImage.getPixelMatrix(is, true)
         is.close()
         val pixelMatrix = new BDM[Double](inputImage.width, inputImage.height, pixelArray.map(_.toDouble))
