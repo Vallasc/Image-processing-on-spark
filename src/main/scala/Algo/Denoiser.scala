@@ -35,7 +35,7 @@ class Denoiser (imageMatrix :DenseMatrix[Double], MAX_BURNS :Int = 100, MAX_SAMP
         if (Random.nextDouble < prob) 1 else -1
     }
 
-    def run (initialization : String = "same", logfile : Boolean = false) = {
+    def run (initialization : String = "same") = {
         println("Denoiser: working")
         println(s"Initialization : $initialization")
         val X = adjustImageIn(imageMatrix)
@@ -47,27 +47,26 @@ class Denoiser (imageMatrix :DenseMatrix[Double], MAX_BURNS :Int = 100, MAX_SAMP
         if (initialization == "rand")
             Y = DenseMatrix.tabulate(imageMatrix.rows, imageMatrix.cols){ (i,j) => randomChoice (Array(-1, 1)) }
 
-        if (!logfile) {
-            var ctr = 0
-            for ( _ <- 0 until MAX_BURNS) {
-                for { 
-                    i <- 1 until N-1
-                    j <- 1 until M-1
-                } Y(i,j) = sample(i, j, Y, X)
-                ctr += 1
-                if( ctr % 10 == 0 )
-                    println(s"Burn-in ${ctr} done!")
-            }
 
-            /*for ( _ <- 0 until MAX_SAMPLES) {
-                for ( i <- 1 until N-1)
-                    for ( j <- 1 until M-1)
-                        Y(i,j) = sample(i, j, Y, X)
-                ctr += 1
-                if( ctr % 10 == 0 )
-                    print(s"Burn-in ${ctr} done!")
-            }*/
+        var ctr = 0
+        for ( _ <- 0 until MAX_BURNS) {
+            for { 
+                i <- 1 until N-1
+                j <- 1 until M-1
+            } Y(i,j) = sample(i, j, Y, X)
+            ctr += 1
+            if( ctr % 10 == 0 )
+                println(s"Burn-in ${ctr} done!")
         }
+
+        /*for ( _ <- 0 until MAX_SAMPLES) {
+            for ( i <- 1 until N-1)
+                for ( j <- 1 until M-1)
+                    Y(i,j) = sample(i, j, Y, X)
+            ctr += 1
+            if( ctr % 10 == 0 )
+                print(s"Burn-in ${ctr} done!")
+        }*/
         println("Denoiser: done")
         adjustImageOut(Y)
     }
