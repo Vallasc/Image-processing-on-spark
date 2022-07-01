@@ -4,8 +4,8 @@ import _root_.Utils.FileUtils
 
 object Noiser {
     val PROB = 0.3
-    val inputImage = "./data/4.jpg"
-    val outputImage = "./data/test_4.png"
+    val inputImage = "./data/nike.png"
+    val outputImage = "./data/nike_noisy.png"
 
     def main(args: Array[String]) = {
         println("Start noiser")
