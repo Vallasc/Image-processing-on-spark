@@ -38,8 +38,8 @@ class SparkJob(val padding: Int = 3,
         val splitted = splitImage(inputMatrix)
 
         // Make RDD of matrixes
-        val matrixes = sc.parallelize(splitted._1, splitted._2 * splitted._3 * 100)
-        matrixes.partitionBy(new HashPartitioner(splitted._2 * splitted._3 * 100)).persist(StorageLevel.MEMORY_ONLY)
+        val matrixes = sc.parallelize(splitted._1, splitted._2 * splitted._3)
+        matrixes.partitionBy(new HashPartitioner(splitted._2 * splitted._3)).persist(StorageLevel.MEMORY_ONLY)
         val computed = compute(matrixes, pipeline)
 
         // Reassemble the matrix
