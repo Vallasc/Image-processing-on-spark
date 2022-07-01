@@ -11,6 +11,9 @@ import com.google.cloud.storage.BlobId
 import java.io.ByteArrayInputStream
 import java.nio.channels.Channels
 import com.google.cloud.storage.BlobInfo
+import java.io.FileInputStream
+import java.io.File
+import java.io.FileOutputStream
 
 
 object FileUtils {
@@ -18,28 +21,23 @@ object FileUtils {
 
     def getInputStream(stringPath: String): InputStream = {
         val isGS = stringPath.size > 5 && stringPath.indexOf("gs://") == 0
-        if(isGS) {
-            val content = storage.readAllBytes(getBlobIdFromPath(stringPath))
-            new ByteArrayInputStream(content)
-        } else {
-            val path = Paths.get(URI.create(stringPath))
-            Files.newInputStream(path)
-        }
+        if(isGS)
+            new ByteArrayInputStream(storage.readAllBytes(getBlobIdFromPath(stringPath)))
+        else
+            new FileInputStream(new File(stringPath))
     }
 
     def getOutputStream(stringPath: String): OutputStream = {
         val isGS = stringPath.size > 5 && stringPath.indexOf("gs://") == 0
         if(isGS) {
             val blobId = getBlobIdFromPath(stringPath)
-            //val blob = storage.get(blobId)
             val blobInfo = BlobInfo.newBuilder(blobId).build()
             val blob = storage.create(blobInfo)
             Channels.newOutputStream(blob.writer())
         } else {
-            val path = Paths.get(URI.create(stringPath))
-            if(!Files.exists(path))
-                Files.createFile(path)
-            Files.newOutputStream(path)
+            val file = new File(stringPath)
+            file.createNewFile()
+            new FileOutputStream(file, false)
         }
     }
 
