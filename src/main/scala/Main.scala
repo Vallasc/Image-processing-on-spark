@@ -93,4 +93,4 @@ object Main {
 }
 
 // sbt assembly
-// spark-submit --class SparkJob ./jar/binary.jar ./data/nike_noisy.png
+// spark-submit --driver-memory 4g --master local[*]  ./jar/binary.jar ./data/nike_noisy.png
