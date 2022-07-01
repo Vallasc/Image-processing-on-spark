@@ -10,95 +10,51 @@ import org.apache.spark.ml.image.ImageSchema._
 import java.io.PrintWriter
 import _root_.Utils.FileUtils
 import java.nio.charset.Charset
+import java.io.InputStream
+import java.io.OutputStream
+import Pipelines.Pipeline
+import scala.collection.parallel.immutable.ParSeq
+import org.apache.spark.HashPartitioner
+import org.apache.spark.storage.StorageLevel
 
-object SparkJob  extends Job {
-    var inputPathImage = "file:///C://data/img_noisy1.png"
-    var outputPathImage = "file:///C://data/out.png"
-    var outputPathJson = "file:///C://data/report.json"
+class SparkJob(val padding: Int = 3,
+                val subHeight: Int = 100,
+                val subWidth: Int = 100,
+                val denoiserRuns: Int = 80,
+                val debug: Int = 1) extends Serializable {
 
-    var padding = 10
-    var subHeight = 300
-    var subWidth = 300
-    var denoiserRuns = 100
-
-    var debug = 1
-
-    val usage = "\nUsage: [--sub_matrix_size] [--padding] [--denoiser_runs] [--debug] [--output_file_json] [--output_file_image] input_file_image\n"
-    def main(args: Array[String]): Unit = {
-        // Check arguments
-        if (args.length % 2 == 0) {
-            println(usage)
-            return
-        }
-        args.sliding(2, 2).toList.collect {
-            case Array("--sub_matrix_size", m_size: String) => {
-                subHeight = m_size.toInt
-                subWidth = m_size.toInt
-            }
-            case Array("--padding", p: String) => padding = p.toInt
-            case Array("--denoiser_runs", runs: String) => denoiserRuns = runs.toInt
-            case Array("--debug", d: String) => debug = d.toInt
-            case Array("--output_file_json", out: String) => outputPathJson = out
-            case Array("--output_file_image", out: String) => outputPathImage = out
-            case Array(out: String) => inputPathImage = out
-        }
-        
-        println(s"\nInput file: ${inputPathImage}")
-        println(s"Output file: ${outputPathImage}")
-        println(s"Output json: ${outputPathJson}")
-        println(s"Sub matrix size: ${subHeight}")
-        println(s"Paddding: ${padding}")
-
-        println("\nStart")
-        val t = Utils.time(run)
-        if(debug > 0)
-            println(s"Time: $t ms")
-
-        val json = "{\"time\":" + t +"}"
-        val os = FileUtils.getOutputStream(outputPathJson)
-        os.write(json.getBytes(Charset.forName("UTF-8")))
-        os.close()
-
-    }
-
-    def run(): Unit = {
+    /**
+     * Runs the Job on the spark cluster given a Pipeline
+     */
+    def run(inputMatrix: BDM[Double], pipeline: Pipeline): BDM[Double] = {
+        // Spark setup
         val conf = new SparkConf().setAppName("GibbsDenoiser")
                                     //.setMaster("local[*]")
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-        conf.registerKryoClasses(Array(classOf[Tuple2[Tuple2[Int, Int], Matrix]]))
-
+        
         val sc = new SparkContext(conf)
 
-        val inputImage = new Image()
-        val is = FileUtils.getInputStream(inputPathImage)
-        val pixelArray = inputImage.getPixelMatrix(is, true)
-        is.close()
-        val pixelMatrix = new BDM[Double](inputImage.width, inputImage.height, pixelArray.map(_.toDouble))
+        // Split big matrix into submatrixes, according to subHeight and subWidth
+        val splitted = splitImage(inputMatrix)
 
-        val splitted = splitImage(pixelMatrix)
+        // Make RDD of matrixes
+        //val matrixes = sc.parallelize(splitted._1, splitted._2 * splitted._3 * 100)
+        val matrixes = sc.parallelize(splitted._1)
+        matrixes.partitionBy(new HashPartitioner(splitted._2 * splitted._3)).persist(StorageLevel.MEMORY_ONLY)
+        val computed = compute(matrixes, pipeline)
 
-        var n = (pixelMatrix.cols) / subWidth // cols divisions
-        var m = (pixelMatrix.rows) / subHeight // rows divisions
-
-        val mat = sc.parallelize(splitted, n * m * 100)
-        val computed = compute(mat, processPipelne)
-
+        // Reassemble the matrix
         val blockMat = new BlockMatrix(computed, subHeight, subWidth)
         val out = Utils.matrixAsBreeze(blockMat.toLocalMatrix())
-        val cleaned = out(0 to pixelMatrix.rows -1, 0 to pixelMatrix.cols -1).copy
-        println("It's all ok")
 
-        val os = FileUtils.getOutputStream(outputPathImage)
-        val outputImage = new Image()
-        outputImage.setPixelMatrix(cleaned.data.map(_.toInt), cleaned.rows, cleaned.cols, true)
-        outputImage.saveImage(os)
-        os.close()
+        // Remove padding border
+        out(0 to inputMatrix.rows -1, 0 to inputMatrix.cols -1).copy
 
         //edges.partitionBy(new RangePartitioner(SparkContextSingleton.DEFAULT_PARALLELISM, edges)).persist(StorageLevel.MEMORY_AND_DISK)
     }
 
 
-    private def splitImage(pixelMatrix: BDM[Double]): Seq[((Int, Int), Matrix)] = {
+    private def splitImage(pixelMatrix: BDM[Double]): (Seq[((Int, Int), Matrix)], Int, Int) = {
         val subHeight = if(this.subHeight <= 0) pixelMatrix.rows else this.subHeight
         val subWidth = if(this.subWidth <= 0) pixelMatrix.cols else this.subWidth
         assert(padding <= subHeight)
@@ -131,9 +87,9 @@ object SparkJob  extends Job {
             println("x sub-matrix: " + n)
             println("y sub-matrix: " + m)
         }
-        for { 
-            p1 <- 0 until n // X
-            p2 <- 0 until m // Y
+        (for { 
+            p1 <- (0 until n) // X
+            p2 <- (0 until m) // Y
         } yield {
             val xFromPadded = p1 * subWidth
             val xToPadded = xFromPadded + subWidth + padding*2 -1
@@ -141,17 +97,18 @@ object SparkJob  extends Job {
             val yToPadded = yFromPadded + subHeight + padding*2 -1
             val matrix = paddedMatrix(yFromPadded to yToPadded, xFromPadded to xToPadded).copy
             ((p2, p1), Utils.matrixFromBreeze(matrix))
-        }
+        }, n, m)
     }
 
-    private def compute(matrixes : RDD[((Int, Int), Matrix)], transform: (BDM[Double]) => (BDM[Double])): RDD[((Int, Int), Matrix)] = {
+    private def compute(matrixes : RDD[((Int, Int), Matrix)], pipeline: Pipeline): RDD[((Int, Int), Matrix)] = {
+        // mapPartitions??
         matrixes.map ( element => {
             val matrix = Utils.matrixAsBreeze(element._2)
-            val out = transform(matrix)
+            val out = removePadding(pipeline.run(matrix))
             (element._1, Utils.matrixFromBreeze(out))
         })
     }
 
+    def removePadding(matrix: BDM[Double]) : BDM[Double] = 
+        matrix(padding to -padding, padding to -padding).copy
 }
-// sbt "runMain SparkJob ./data/nike_noisy.png"
-// spark-submit --class SparkJob ./jar/binary.jar ./data/nike_noisy.png
