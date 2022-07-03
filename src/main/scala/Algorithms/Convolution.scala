@@ -2,7 +2,20 @@ package Algorithms
 
 import breeze.linalg.DenseMatrix
 
+/**
+  * A convolution process takes a kernel matrix, which is slid across the image and multiplied with the input 
+  * such that the output is enhanced in a certain desirable manner.
+  *
+  * @param convolutionKernel kernel matrix
+  */
 class Convolution (convolutionKernel :DenseMatrix[Double]) extends Algorithm {
+
+    /**
+    * Main run algorithm method, takes a matrix and return a matrix
+    *
+    * @param imageMatrix unprocessed image matrix
+    * @return processed image matrix
+    */
     def run (imageMatrix :DenseMatrix[Double]) :DenseMatrix[Double]  = {
         assert(convolutionKernel.cols == 3)
         assert(convolutionKernel.rows == 3)

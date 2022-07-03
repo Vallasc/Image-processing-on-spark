@@ -2,6 +2,9 @@ import java.io.File
 import scala.util.Random
 import _root_.Utils.FileUtils
 
+/**
+  * Used to make sample noise images
+  */
 object Noiser {
     val PROB = 0.3
     val inputImage = "./data/nike.png"

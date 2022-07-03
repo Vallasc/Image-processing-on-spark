@@ -15,10 +15,18 @@ import java.io.FileInputStream
 import java.io.File
 import java.io.FileOutputStream
 
-
+/**
+  * Utility  functions for accessing the google cloud bucket
+  */
 object FileUtils {
     val storage = StorageOptions.getDefaultInstance().getService()
 
+    /**
+      * Returns an input stream of the provided path
+      *
+      * @param stringPath file path
+      * @return file input stream 
+      */
     def getInputStream(stringPath: String): InputStream = {
         val isGS = stringPath.size > 5 && stringPath.indexOf("gs://") == 0
         if(isGS)
@@ -27,6 +35,12 @@ object FileUtils {
             new FileInputStream(new File(stringPath))
     }
 
+    /**
+      * Returns an output stream of the provided path
+      *
+      * @param stringPath file path
+      * @return file output stream 
+      */
     def getOutputStream(stringPath: String): OutputStream = {
         val isGS = stringPath.size > 5 && stringPath.indexOf("gs://") == 0
         if(isGS) {
@@ -41,6 +55,12 @@ object FileUtils {
         }
     }
 
+    /**
+      * Get a blob from a given path
+      *
+      * @param stringPath file path
+      * @return blobId
+      */
     private def getBlobIdFromPath(stringPath: String) : BlobId = {
         val bucket = stringPath.split("/")(2)
         val file = stringPath.split(s"gs://${bucket}/")(1)

@@ -2,7 +2,18 @@ package Algorithms
 
 import breeze.linalg.DenseMatrix
 
+/**
+  * Median filter works by moving through the image pixel by pixel,
+  * replacing each value with the median value of neighbouring pixels
+  */
 object MedianFilter extends Algorithm {
+
+    /**
+    * Main run algorithm method, takes a matrix and return a matrix
+    *
+    * @param imageMatrix unprocessed image matrix
+    * @return processed image matrix
+    */
     def run (imageMatrix :DenseMatrix[Double]): DenseMatrix[Double] = {
         val outMatrix =  DenseMatrix.zeros[Double](imageMatrix.rows, imageMatrix.cols)
         for {

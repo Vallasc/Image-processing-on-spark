@@ -31,8 +31,6 @@ def serve_files(filename):
 
 @route('/upload', method='POST')
 def do_work():
-    # Insert num worker
-    # Worker memory
     try:
         kill(spark_process.pid)
         time.sleep(20)
@@ -50,7 +48,7 @@ def do_work():
     
     file_out_path = "{path}/out_{file}".format(path=save_path, file=file_name)
     file_json = file_out_path + ".json"
-    command = ["spark-submit", "--class", "SparkJob", "./jar/binary.jar",
+    command = ["spark-submit", "--class", "Main", "./jar/binary.jar",
                 "--output_file_json", file_json, "--output_file_image", file_out_path, file_input_path]
     print(command)
     spark_process = subprocess.Popen(command, shell = True)

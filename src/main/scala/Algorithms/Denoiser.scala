@@ -8,9 +8,15 @@ import breeze.linalg.InjectNumericOps
 import scala.util.Random
 import java.io.File
 
-class Denoiser (MAX_BURNS :Int = 100, MAX_SAMPLES :Int = 200) extends Algorithm {
+/**
+  * Gibbs denoiser implementation
+  *
+  * @param maxBurns max number of iterations
+  */
+class Denoiser (maxBurns:Int = 100) extends Algorithm {
     val ITA = 0.9
     val BETA = 2
+    val MAX_SAMPLES :Int = 200
     val initialization = "same"
 
     private def energy (Y : DenseMatrix[Double], X: DenseMatrix[Double]) : Double = {
@@ -21,15 +27,29 @@ class Denoiser (MAX_BURNS :Int = 100, MAX_SAMPLES :Int = 200) extends Algorithm 
         + sum( Y( ::, 0 until M-1 ) *:* Y( ::, 1 to -1 ) )
     }
 
+    /**
+      * Sample phase
+      *
+      * @param i pixel row
+      * @param j pixel col
+      * @param Y processed matrix
+      * @param X original matrix
+      * @return
+      */
     private def sample (i: Int, j: Int, Y: DenseMatrix[Double], X: DenseMatrix[Double]) : Int = {
         val blanket = new DenseVector[Double]( Array(Y(i-1, j), Y(i, j-1), Y(i, j+1), Y(i+1, j), X(i, j)) )
         
         val w = ITA * blanket(-1) + BETA * sum(blanket(0 until 4))
         val prob = 1 / (1 + math.exp(-2*w))
-        //val prob = exp( 2 * sum(blanket).toDouble ) / ( 1 + exp( 2 * sum(blanket).toDouble ))
         if (Random.nextDouble < prob) 1 else -1
     }
 
+    /**
+      * Main run algorithm method, takes a matrix and return a matrix
+      *
+      * @param imageMatrix unprocessed image matrix
+      * @return processed image matrix
+      */
     def run (imageMatrix :DenseMatrix[Double]): DenseMatrix[Double] = {
         println("Denoiser: working")
         println(s"Initialization : $initialization")
@@ -44,7 +64,7 @@ class Denoiser (MAX_BURNS :Int = 100, MAX_SAMPLES :Int = 200) extends Algorithm 
 
 
         var ctr = 0
-        for ( _ <- 0 until MAX_BURNS) {
+        for ( _ <- 0 until maxBurns) {
             for { 
                 i <- 1 until N-1
                 j <- 1 until M-1

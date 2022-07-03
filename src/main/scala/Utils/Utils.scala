@@ -3,6 +3,13 @@ import org.apache.spark.mllib.linalg.{Matrix, DenseMatrix, SparseMatrix, Matrice
 
 object Utils {
 
+    /**
+      * Return the execution time of
+      * code block
+      *
+      * @param block code to be executed
+      * @return (code return, time)
+      */
     def time[R](block: => R): (R, Long) = {
         val t0 = System.nanoTime()
         val result = block    // call-by-name
@@ -10,6 +17,12 @@ object Utils {
         (result, (t1 - t0)/1000000)
     }
 
+    /**
+      * Creates a BreezeMatrix instance from a Matrix.
+      *
+      * @param matrix a matrix
+      * @return a BreezeMatrix istance
+      */
     def matrixAsBreeze (matrix: Matrix): BDM[Double] = {
         if (!matrix.isTransposed) {
             new BDM[Double](matrix.numRows, matrix.numCols, matrix.toArray)

@@ -9,11 +9,22 @@ import java.awt.image.ColorModel
 import java.io.OutputStream
 import java.io.InputStream
 
+/**
+  * Utility class for extracting pixel matrix from an image
+  * and save a matrix to a image file
+  */
 class Image {
     var width: Int = 0
     var height: Int = 0
     var pixelMatrix: Array[Int] = Array()
 
+    /**
+      * Get pixel matrix from an image file
+      *
+      * @param inputStream file input stream
+      * @param greyScale import image as greyScale
+      * @return pixel matrix as array
+      */
     def getPixelMatrix(inputStream: InputStream, greyScale: Boolean = false) : Array[Int] = {
         val image = ImageIO.read(inputStream)
         width = image.getWidth
@@ -44,6 +55,14 @@ class Image {
         outMatrix
     }
 
+    /**
+      * Set internal pixel matrix 
+      *
+      * @param pixelMatrix
+      * @param width matrix width
+      * @param height matrix height
+      * @param greyScale use greyscale
+      */
     def setPixelMatrix(pixelMatrix: Array[Int], width: Int, height: Int, greyScale: Boolean = false) = {
         this.width = width
         this.height = height
@@ -53,6 +72,12 @@ class Image {
             this.pixelMatrix = pixelMatrix
     }
 
+    /**
+      * Save pixel matrix to file
+      *
+      * @param outputStream file output stream
+      * @return true if successful, false otherwise
+      */
     def saveImage(outputStream: OutputStream) = {
         val buffer: DataBufferInt = new DataBufferInt(pixelMatrix, pixelMatrix.length)
 

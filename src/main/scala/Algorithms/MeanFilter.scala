@@ -2,7 +2,18 @@ package Algorithms
 
 import breeze.linalg.DenseMatrix
 
-class MeanFilter extends Algorithm {
+/**
+  * Mean filtering is a simple, intuitive and easy to implement method of smoothing images,
+  * reducing the amount of intensity variation between one pixel and the next
+  */
+object MeanFilter extends Algorithm {
+
+    /**
+    * Main run algorithm method, takes a matrix and return a matrix
+    *
+    * @param imageMatrix unprocessed image matrix
+    * @return processed image matrix
+    */
     def run (imageMatrix :DenseMatrix[Double]): DenseMatrix[Double] = {
         val outMatrix =  DenseMatrix.zeros[Double](imageMatrix.rows, imageMatrix.cols)
         for {

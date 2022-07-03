@@ -8,6 +8,12 @@ import Pipelines.{EdgeDetection, MedianDenoiser, GibbsEdgeDetection, Pipeline}
 import Algorithms.Denoiser
 import Pipelines.GibbsDenoiser
 
+/**
+  * Main entry point
+  * 
+  * sbt assembly
+  * spark-submit --driver-memory 8g --master local[*]  ./jar/binary.jar ./data/nike_noisy.png
+  */
 object Main {
 
     var inputPathImage = "./data/input.png"
@@ -48,6 +54,7 @@ object Main {
         println(s"Sub matrix size: ${subHeight}")
         println(s"Paddding: ${padding}")
 
+        // Get image as matrix
         val inputStream = FileUtils.getInputStream(inputPathImage)
         val inputImage = new Image()
         val pixelArray = inputImage.getPixelMatrix(inputStream, true)
@@ -56,6 +63,7 @@ object Main {
 
         // Define the Spark Job
         val job = new SparkJob(padding, subHeight, subWidth, denoiserRuns, debug)
+        // Match the selected pipeline
         val pipeline = inputPiepeline match {
             case "GibbsDenoise" => new GibbsDenoiser(denoiserRuns)
             case "GibbsEdgeDetection" => new GibbsEdgeDetection(denoiserRuns)
@@ -64,16 +72,19 @@ object Main {
         }
 
         println("\nStart")
+        // Runs job and gets execution time
         val result = Utils.time(job.run(pixelMatrix, pipeline))
         if(debug > 0)
             println(s"Time: ${result._2} ms")
 
+        // Saves output image as file
         val outputStream = FileUtils.getOutputStream(outputPathImage)
         val outputImage = new Image()
         outputImage.setPixelMatrix(result._1.data.map(_.toInt), result._1.rows, result._1.cols, true)
         outputImage.saveImage(outputStream)
         outputStream.close()
 
+        // Forges the output report
         val json = s"""{
                 "time": ${result._2},
                 "inputPiepeline": "${inputPiepeline}",
@@ -86,11 +97,9 @@ object Main {
                 "subWidth": ${subWidth}
             }"""
 
+        // Saves report to file
         val jsonOutputStream = FileUtils.getOutputStream(outputPathJson)
         jsonOutputStream.write(json.getBytes(Charset.forName("UTF-8")))
         jsonOutputStream.close()
     }
 }
-
-// sbt assembly
-// spark-submit --driver-memory 8g --master local[*]  ./jar/binary.jar ./data/nike_noisy.png

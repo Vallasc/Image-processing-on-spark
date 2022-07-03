@@ -51,6 +51,12 @@ class SparkJob(val padding: Int = 3,
     }
 
 
+    /**
+      * Split image matrix into submatrixes based on subHeight and subWidth
+      *
+      * @param pixelMatrix input matrix
+      * @return Seq[((i,j), matrix)]
+      */
     private def splitImage(pixelMatrix: BDM[Double]): (Seq[((Int, Int), Matrix)], Int, Int) = {
         val subHeight = if(this.subHeight <= 0) pixelMatrix.rows else this.subHeight
         val subWidth = if(this.subWidth <= 0) pixelMatrix.cols else this.subWidth
@@ -60,6 +66,7 @@ class SparkJob(val padding: Int = 3,
         assert(pixelMatrix.rows >= subHeight)
         assert(pixelMatrix.cols >= subWidth)
 
+        // Calculate matrixs
         var n = (pixelMatrix.cols) / subWidth // cols divisions
         var m = (pixelMatrix.rows) / subHeight // rows divisions
         var restWidth = (pixelMatrix.cols % subWidth)
@@ -74,6 +81,7 @@ class SparkJob(val padding: Int = 3,
             restHeight = subHeight - restHeight
         } 
 
+        // Padded matrix
         val paddedMatrix = BDM.zeros[Double](pixelMatrix.rows + restHeight + padding*2, pixelMatrix.cols + restWidth + padding*2)
         // Set padded image
         paddedMatrix(padding to padding + pixelMatrix.rows -1, padding to padding + pixelMatrix.cols -1) := pixelMatrix
@@ -84,6 +92,7 @@ class SparkJob(val padding: Int = 3,
             println("x sub-matrix: " + n)
             println("y sub-matrix: " + m)
         }
+        // For each pair of matrix elements crop the input matrix
         (for { 
             p1 <- (0 until n) // X
             p2 <- (0 until m) // Y
@@ -97,8 +106,14 @@ class SparkJob(val padding: Int = 3,
         }, n, m)
     }
 
+    /**
+      * Apply pipeline tasks to the given RDD matrixes
+      *
+      * @param matrixes spark RDD
+      * @param pipeline defined pipeline
+      * @return processed RDD
+      */
     private def compute(matrixes : RDD[((Int, Int), Matrix)], pipeline: Pipeline): RDD[((Int, Int), Matrix)] = {
-        // mapPartitions??
         matrixes.map ( element => {
             val matrix = Utils.matrixAsBreeze(element._2)
             val out = removePadding(pipeline.run(matrix))
@@ -106,6 +121,7 @@ class SparkJob(val padding: Int = 3,
         })
     }
 
+    // Remove pading from the matrix
     def removePadding(matrix: BDM[Double]) : BDM[Double] = 
         matrix(padding to -padding, padding to -padding).copy
 }
