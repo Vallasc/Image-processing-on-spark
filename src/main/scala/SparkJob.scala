@@ -17,6 +17,7 @@ import scala.collection.parallel.immutable.ParSeq
 import org.apache.spark.HashPartitioner
 import org.apache.spark.storage.StorageLevel
 
+
 class SparkJob(val padding: Int = 3,
                 val subHeight: Int = 100,
                 val subWidth: Int = 100,
