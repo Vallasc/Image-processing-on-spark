@@ -80,7 +80,9 @@ To run the program on the Google Cloud platform you have to create a new project
 And if you haven't done it yet you have to enable billing for the project.
 
 The first step is to do the setup of the notebook environment variables. You will be asked to enable access to your Google Drive and Google credentials.
+
 ![create env file](./docs/env.png)
+
 Then you need to fill the file that is created in the root of your google drive with your project id and the name you want to give the bucket.
 
 Finally run all the cells in *Setup environment*, this will create a new bucket and all the the *./data* files are copied into it. It also create a new directory (*./bucket*) on the Colab runtime that is directly binded to the cloud storage bucket.
@@ -113,6 +115,7 @@ Runs:
 * 5 workers, 20 cores, 8k test image
 
 ![strong scalability chart](./docs/strong.png)
+
 As you can see by doubling the number of cores the execution time is reduced by about half each time.
 
 #### Weak scalability
@@ -129,6 +132,7 @@ Runs:
 * 4 workers, 16 cores, 8k image
 
 ![strong scalability chart](./docs/weak.png)
+
 As you can see the execution is always around 4 minutes.
 
 ### Web interface
