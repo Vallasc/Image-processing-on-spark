@@ -4,7 +4,7 @@ This project aims to be a parallel and distributed implementation of the Gibbs d
 The Gibbs sampling algorithm details are showed in the following [paper](http://stanford.edu/class/ee367/Winter2018/yue_ee367_win18_report.pdf).
 
 ### Processing pipeline
-The program get the image that you want to process and split it into smaller chunks. Each sub-image, and its corresponding position, is pushed into a RDD and then processed by a Spark worker.
+The program get the image that you want to process and split it into smaller chunks. Each sub-image, and its corresponding position, is pushed into a RDD (Resilient Distributed Dataset) and then processed by a Spark worker.
 
 Multiple operations can be performed on the same chunk, these can be implemented exenting the <code>Pipeline</code> class and setting all the tasks needed. Tasks can also be implemented by extending the <code>Algorithm</code> trait.
 
@@ -79,9 +79,11 @@ To run the program on the Google Cloud platform you have to create a new project
 
 And if you haven't done it yet you have to enable billing for the project.
 
-The first step is to do the setup of the notebook environment variables. You will be asked to enable access to your google drive.
+The first step is to do the setup of the notebook environment variables. You will be asked to enable access to your Google Drive and Google credentials.
 ![create env file](./docs/env.png)
-Then you need to compile the file that is created in the root of your google drive with your project id and the name you want to give the bucket.
+Then you need to fill the file that is created in the root of your google drive with your project id and the name you want to give the bucket.
+
+Finally run all the cells in *Setup environment*, this will create a new bucket and all the the *./data* files are copied into it. It also create a new directory (*./bucket*) on the Colab runtime that is directly binded to the cloud storage bucket.
 
 #### Simple job
 To run a simple cluster with 2 workers (8 core) execute the cell *Simple cluster*. You can change the commands parameters to meet your needs.
@@ -90,11 +92,14 @@ To run a simple cluster with 2 workers (8 core) execute the cell *Simple cluster
 
 #### Delete resources
 To delete all resources allocated by the cluster and also all the bucket content, you can run the cell *Delete cluster and data*.
+
 ![delete resources](./docs/delete.png)
 ### Performance tests
 There are also tests in the notebook to evaluate the performance of the cluster.
 #### Strong scalability
 In this test we want to see how the execution time changes by keeping the workload fixed and increasing the number of computational resources.
+
+**REMEMBER TO DO THIS** to avoid paying for what you are not using.
 
 Cluster setup:
 * Master machine N1, 16GB RAM, 4 cores, SSD boot drive
@@ -128,3 +133,7 @@ As you can see the execution is always around 4 minutes.
 
 ### Web interface
 There is also a web interface that you can use by creating a cluster and running the *Web interface* cell.
+
+![strong scalability chart](./docs/web.png)
+
+Remember to **DELETE THE CLUSTER** when you have done.
