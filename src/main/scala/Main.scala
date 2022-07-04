@@ -65,7 +65,7 @@ object Main {
         val job = new SparkJob(padding, subHeight, subWidth, denoiserRuns, debug)
         // Match the selected pipeline
         val pipeline = inputPiepeline match {
-            case "GibbsDenoise" => new GibbsDenoiser(denoiserRuns)
+            case "GibbsDenoiser" => new GibbsDenoiser(denoiserRuns)
             case "GibbsEdgeDetection" => new GibbsEdgeDetection(denoiserRuns)
             case "EdgeDetection" => EdgeDetection
             case "MedianDenoiser" => MedianDenoiser
