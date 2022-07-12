@@ -39,7 +39,7 @@ class SparkJob(val padding: Int = 3,
         val splitted = splitImage(inputMatrix)
 
         // Make RDD of matrixes
-        val matrixes = sc.parallelize(splitted._1, splitted._2 * splitted._3)
+        val matrixes = sc.parallelize(splitted._1.seq, splitted._2 * splitted._3)
         matrixes.partitionBy(new HashPartitioner(splitted._2 * splitted._3)).persist(StorageLevel.MEMORY_ONLY)
         val computed = compute(matrixes, pipeline)
 
@@ -58,7 +58,7 @@ class SparkJob(val padding: Int = 3,
       * @param pixelMatrix input matrix
       * @return Seq[((i,j), matrix)]
       */
-    private def splitImage(pixelMatrix: BDM[Double]): (Seq[((Int, Int), Matrix)], Int, Int) = {
+    private def splitImage(pixelMatrix: BDM[Double]): (ParSeq[((Int, Int), Matrix)], Int, Int) = {
         val subHeight = if(this.subHeight <= 0) pixelMatrix.rows else this.subHeight
         val subWidth = if(this.subWidth <= 0) pixelMatrix.cols else this.subWidth
         assert(padding <= subHeight)
@@ -95,8 +95,8 @@ class SparkJob(val padding: Int = 3,
         }
         // For each pair of matrix elements crop the input matrix
         (for { 
-            p1 <- (0 until n) // X
-            p2 <- (0 until m) // Y
+            p1 <- (0 until n).par // X
+            p2 <- (0 until m).par // Y
         } yield {
             val xFromPadded = p1 * subWidth
             val xToPadded = xFromPadded + subWidth + padding*2 -1
